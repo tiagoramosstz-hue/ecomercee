@@ -54,6 +54,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/public           ./public
 
 # Copy prisma schema + migrations for runtime `prisma migrate deploy`
 COPY --from=builder --chown=nextjs:nodejs /app/prisma           ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/seed.mjs         ./seed.mjs
+
 
 # Copy the Prisma CLI (package + generated client + client package) so the
 # local `node_modules/.bin/prisma` exists and `npx` does not try to fetch it
@@ -70,4 +72,4 @@ ENV HOSTNAME="0.0.0.0"
 
 # Using node directly to execute prisma prevents npx from attempting to download
 # prisma due to it being missing from the standalone package.json tree.
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node seed.mjs && node server.js"]
