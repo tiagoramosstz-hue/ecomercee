@@ -3,6 +3,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY prisma ./prisma/
 # Install ALL deps (including devDeps needed for build/prisma generate)
 RUN npm ci
 
