@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+enum Size {
+  P
+  M
+  G
+  GG
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  role          Role     @default(CLIENT)
+  created_at    DateTime @default(now())
+  orders        Order[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String
+  price_cents Int
+  sku         String      @unique
+  image_url   String
+  created_at  DateTime    @default(now())
+  inventory   Inventory[]
+  order_items OrderItem[]
+
+  @@map("products")
+}
+
+model Inventory {
+  id         String  @id @default(uuid())
+  product_id String
+  size       Size
+  quantity   Int
+  product    Product @relation(fields: [product_id], references: [id])
+
+  @@unique([product_id, size])
+  @@map("inventory")
+}
+
+model Order {
+  id                       String      @id @default(uuid())
+  user_id                  String
+  stripe_payment_intent_id String?     @unique
+  status                   OrderStatus @default(PENDING)
+  total_price_cents        Int
+  created_at               DateTime    @default(now())
+  user                     User        @relation(fields: [user_id], references: [id])
+  items                    OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                      String  @id @default(uuid())
+  order_id                String
+  product_id              String
+  size                    Size
+  quantity                Int
+  custom_name             String?
+  custom_number           String?
+  price_at_purchase_cents Int
+  order                   Order   @relation(fields: [order_id], references: [id])
+  product                 Product @relation(fields: [product_id], references: [id])
+
+  @@map("order_items")
+}
